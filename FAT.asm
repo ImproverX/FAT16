@@ -240,9 +240,9 @@ L_R1:	LDAX D
 	INX  H
 	DCR  C
 	JNZ	L_R1	; копирование ПП перемещения
-LxR5:	LXI  H, 0100h	; куда перемещать
-	POP  D		; = FLEN
-	XCHG
+LxR5:	LXI  D, 0100h	; куда перемещать
+	POP  H		; = FLEN
+;	XCHG
 	DAD  D
 	XCHG
 	INX  D
@@ -328,7 +328,7 @@ CPY01:	LHLD	FLENH
 	JNC	CPY05	; большой файл (>= 48кБ) -- пропускаем
 	CALL	L_FLDN	; загрузка файла в буфер
 	JC	CPY06	; ошибка загрузки
-	PUSH D
+	PUSH D		; = FLEN
 	LXI  H, FNAME
 	PUSH H
 	CALL	PRN_NF	; печатать имя файла из adr(HL)
@@ -485,15 +485,16 @@ L_FLDN:	LHLD	FLEN
 	PUSH H
 	POP  B		; размер файла
 	LXI  H, BufLD	; куда грузить
-	PUSH H
+;	PUSH H
 	CALL	F_READ	; читаем файл в память
-	POP  H		; = BufLD
-	POP  D		; = FLEN
-	DAD  D
+;	POP  H		; = BufLD
+	POP  D		; DE = FLEN
+;	DAD  D
 	MVI  A, 01Ah
 L_FL0:	MOV  M, A
 	INR  L
 	JNZ	L_FL0	; дополняем файл значениями 1А
+	MOV  L, E	; HL = последний адрес в памяти +1
 	RET
 ;
 L_FLNO:	LXI  D, NOFOUND
@@ -768,7 +769,8 @@ ERROR:	.DB " Ошибка$"
 ;
 ALLFILS:.DB "*.*",0
 ;
-ABOUT:	.DB " FAT16 для МДОС/РДС Вектор-06ц"
+ABOUT:	.DB 01Bh, 05Bh
+	.DB " FAT16 для МДОС/РДС Вектор-06ц"
 	.DB ", версия 0.2 (c)Improver,2026"
 	.DB 0Dh, 0Ah, 0Ah, "$"
 PROMPT:	.DB 0DH,0AH,"FAT:$"
